@@ -1,0 +1,2 @@
+plugins:
+- github.com/kmaehashi/sensorbee-traceback-formatter/plugin
