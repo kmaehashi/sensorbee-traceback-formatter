@@ -4,7 +4,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"gopkg.in/sensorbee/sensorbee.v0/core"
 	"gopkg.in/sensorbee/sensorbee.v0/data"
-	"runtime/debug"
+	"runtime"
 )
 
 type TracebackFormatter struct {
@@ -15,8 +15,19 @@ type TracebackFormatter struct {
 func (f *TracebackFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// Only print stacktrace if the level of the entry is higher than the specified log level.
 	if entry.Level <= f.level {
-		// TODO use runtime.Caller and append the records to entry.Data.
-		debug.PrintStack()
+		traceback := []map[string]interface{}{}
+		for level := 2; ; level += 1 {
+			pc, file, line, ok := runtime.Caller(level)
+			if !ok {
+				break
+			}
+			traceback = append(traceback, map[string]interface{}{
+				"func": runtime.FuncForPC(pc).Name(),
+				"file": file,
+				"line": line,
+			})
+		}
+		entry.Data["traceback"] = traceback
 	}
 	return f.parent.Format(entry)
 }
