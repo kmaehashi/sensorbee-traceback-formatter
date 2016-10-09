@@ -1,6 +1,7 @@
 package traceback
 
 import (
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"gopkg.in/sensorbee/sensorbee.v0/core"
 	"gopkg.in/sensorbee/sensorbee.v0/data"
@@ -15,17 +16,13 @@ type TracebackFormatter struct {
 func (f *TracebackFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// Only print stacktrace if the level of the entry is higher than the specified log level.
 	if entry.Level <= f.level {
-		traceback := []map[string]interface{}{}
+		traceback := []string{}
 		for level := 2; ; level += 1 {
 			pc, file, line, ok := runtime.Caller(level)
 			if !ok {
 				break
 			}
-			traceback = append(traceback, map[string]interface{}{
-				"func": runtime.FuncForPC(pc).Name(),
-				"file": file,
-				"line": line,
-			})
+			traceback = append(traceback, fmt.Sprintf("%s (%s:%d)\n", runtime.FuncForPC(pc).Name(), file, line))
 		}
 		entry.Data["traceback"] = traceback
 	}
